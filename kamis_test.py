@@ -42,12 +42,22 @@ for category in (100, 200, 300, 400, 500, 600):
                     "cond[item_cd::EQ]": str(item),
                 }
                 url = base + "?" + urllib.parse.urlencode(params)
+                for attempt in range(4):
+                    try:
+                        with urllib.request.urlopen(
+                            urllib.request.Request(url, headers={"User-Agent": "Deulsseok-KAMIS/1.0"}),
+                            timeout=30,
+                        ) as response:
+                            payload = json.loads(response.read().decode("utf-8-sig"))
+                        break
+                    except (urllib.error.URLError, TimeoutError, ValueError, json.JSONDecodeError) as exc:
+                        if attempt == 3:
+                            errors.append({"category": category, "item": item, "sale_type": sale_type, "page": page, "error": str(exc)[:160]})
+                        else:
+                            time.sleep(2 ** attempt)
+                else:
+                    break
                 try:
-                    with urllib.request.urlopen(
-                        urllib.request.Request(url, headers={"User-Agent": "Deulsseok-KAMIS/1.0"}),
-                        timeout=30,
-                    ) as response:
-                        payload = json.loads(response.read().decode("utf-8-sig"))
                     header = payload.get("response", {}).get("header", {})
                     if str(header.get("resultCode", "")) not in ("0", "00", "NORMAL_SERVICE"):
                         raise ValueError(str(header.get("resultMsg", "API error")))
@@ -76,4 +86,4 @@ print("DONE:", len(records), "records;", len(summary), "item/type matches;", len
 if not records:
     sys.exit("No KAMIS prices collected")
 if errors:
-    sys.exit("Some KAMIS requests failed; partial results saved, check errors")
+    print("WARNING: partial results saved; failed requests:", len(errors))
