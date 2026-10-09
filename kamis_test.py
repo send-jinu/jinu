@@ -12,7 +12,7 @@ key = os.environ.get("KAMIS_API_KEY", "").strip()
 if not key:
     sys.exit("KAMIS_API_KEY GitHub Actions secret is not set.")
 today = datetime.date.today()
-start = today - datetime.timedelta(days=7)
+start = today - datetime.timedelta(days=30)
 params = {
     "serviceKey": urllib.parse.unquote(key),
     "returnType": "JSON",
