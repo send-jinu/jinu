@@ -22,8 +22,6 @@ params = {
     "cond[exmn_ymd::LTE]": today.strftime("%Y%m%d"),
 }
 params["cond[se_cd::EQ]"] = "02"
-params["cond[ctgry_cd::EQ]"] = "100"
-params["cond[item_cd::EQ]"] = "111"
 url = "https://apis.data.go.kr/B552845/perDay/price?" + urllib.parse.urlencode(params)
 try:
     with urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "Deulsseok-KAMIS/1.0"}), timeout=30) as response:
