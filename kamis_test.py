@@ -28,14 +28,16 @@ url = "https://apis.data.go.kr/B552845/perDay/price?" + urllib.parse.urlencode(p
 try:
     with urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "Deulsseok-KAMIS/1.0"}), timeout=30) as response:
         payload = response.read().decode("utf-8-sig")
+except urllib.error.HTTPError as exc:
+    sys.exit(f"API HTTP error: status={exc.code}, reason={exc.reason}")
 except (urllib.error.URLError, TimeoutError) as exc:
-    sys.exit(f"API request failed ({type(exc).__name__}); verify the secret and API activation.")
+    sys.exit(f"API connection error: {type(exc).__name__}, reason={getattr(exc, 'reason', str(exc))}")
 try:
     data = json.loads(payload)
 except json.JSONDecodeError:
     sys.exit("API returned a non-JSON response. Check the workflow log and API approval.")
 header = data.get("response", {}).get("header", {}) if isinstance(data, dict) else {}
-if header and str(header.get("resultCode", "")) not in ("00", "0", "NORMAL_SERVICE"):
+if not header or str(header.get("resultCode", "")) not in ("00", "0", "NORMAL_SERVICE"):
     sys.exit("API error: " + str(header.get("resultMsg", "unknown")))
 Path("data").mkdir(exist_ok=True)
 Path("data/kamis_connection_test.json").write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
