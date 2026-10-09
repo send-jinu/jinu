@@ -1,4 +1,4 @@
-name: KAMIS API test
+name: KAMIS Real Price Collection
 on:
   workflow_dispatch:
   push:
@@ -12,7 +12,7 @@ concurrency:
   group: kamis-data-update
   cancel-in-progress: false
 jobs:
-  test:
+  collect:
     runs-on: ubuntu-latest
     timeout-minutes: 90
     steps:
