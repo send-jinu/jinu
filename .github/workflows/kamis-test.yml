@@ -3,12 +3,30 @@ on:
   workflow_dispatch:
   schedule:
     - cron: '15 0 * * *'
+permissions:
+  contents: write
+concurrency:
+  group: kamis-data-update
+  cancel-in-progress: false
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Run test
+      - name: Fetch KAMIS prices
         env:
           KAMIS_API_KEY: ${{ secrets.KAMIS_API_KEY }}
         run: python kamis_test.py
+      - name: Commit updated KAMIS JSON
+        run: |
+          git add data/kamis_connection_test.json
+          if ! git diff --cached --quiet; then
+            git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -m "Update KAMIS price data"
+            git push
+          fi
+      - name: Upload KAMIS response artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: kamis-price-response
+          path: data/kamis_connection_test.json
+          retention-days: 7
