@@ -1,6 +1,9 @@
 name: KAMIS API test
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - 'kamis_test.py'
   schedule:
     - cron: '15 0 * * *'
 permissions:
