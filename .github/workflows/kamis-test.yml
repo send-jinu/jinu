@@ -14,6 +14,7 @@ concurrency:
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
       - name: Fetch KAMIS prices
@@ -22,7 +23,7 @@ jobs:
         run: python kamis_test.py
       - name: Commit updated KAMIS JSON
         run: |
-          git add data/kamis_connection_test.json
+          git add data/kamis_all_prices_30d.json
           if ! git diff --cached --quiet; then
             git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -m "Update KAMIS price data"
             git push
@@ -31,5 +32,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: kamis-price-response
-          path: data/kamis_connection_test.json
+          path: data/kamis_all_prices_30d.json
           retention-days: 7
