@@ -21,7 +21,9 @@ params = {
     "cond[exmn_ymd::GTE]": start.strftime("%Y%m%d"),
     "cond[exmn_ymd::LTE]": today.strftime("%Y%m%d"),
 }
-params["cond[se_cd::EQ]"] = "01"
+params["cond[se_cd::EQ]"] = "02"
+params["cond[ctgry_cd::EQ]"] = "100"
+params["cond[item_cd::EQ]"] = "111"
 url = "https://apis.data.go.kr/B552845/perDay/price?" + urllib.parse.urlencode(params)
 try:
     with urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "Deulsseok-KAMIS/1.0"}), timeout=30) as response:
@@ -39,4 +41,7 @@ if not header or str(header.get("resultCode", "")) not in ("00", "0", "NORMAL_SE
     sys.exit("API error: " + str(header.get("resultMsg", "unknown")))
 Path("data").mkdir(exist_ok=True)
 Path("data/kamis_connection_test.json").write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
-print("KAMIS API response saved. Top-level fields:", list(data) if isinstance(data, dict) else type(data).__name__)
+count = int(data.get("response", {}).get("body", {}).get("totalCount", 0))
+print("KAMIS API totalCount:", count)
+if count == 0:
+    sys.exit("No prices returned; check request filters and survey dates.")
