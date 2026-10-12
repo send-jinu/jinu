@@ -17,6 +17,14 @@ jobs:
         env:
           CHAMPRICE_SERVICE_KEY: ${{ secrets.CHAMPRICE_SERVICE_KEY }}
         run: python champrice/diagnose_api.py
+      - name: Upload verified product and store catalogs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: champrice-product-store-catalog
+          path: champrice/catalog.json
+          if-no-files-found: ignore
+          retention-days: 7
       - name: Verify live Champrice API
         env:
           CHAMPRICE_SERVICE_KEY: ${{ secrets.CHAMPRICE_SERVICE_KEY }}
