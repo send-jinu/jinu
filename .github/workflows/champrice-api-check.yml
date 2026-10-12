@@ -1,6 +1,10 @@
 name: Champrice GW Live API Check
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/champrice-api-check.yml'
+      - 'champrice/verify_api.py'
 permissions:
   contents: read
 jobs:
