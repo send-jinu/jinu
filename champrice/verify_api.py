@@ -41,7 +41,8 @@ def fetch_xml(endpoint, params):
         if tag in {"returnauthmsg", "errormsg", "errormessage"} and value:
             raise RuntimeError(f"Gateway error on {endpoint}: {value[:120]}")
         if tag in {"resultcode", "returnreasoncode"} and value not in {"00", "0", "000", "SUCCESS", "success"}:
-            raise RuntimeError(f"API result code on {endpoint}: {value[:40]}")
+            message = next(((x.text or "").strip() for x in root.iter() if x.tag.rsplit("}", 1)[-1].lower() in {"resultmsg", "returnauthmsg", "errormsg"}), "")
+            raise RuntimeError(f"API result code on {endpoint}: {value[:40]}; message: {message[:140]}")
     return root
 
 
@@ -59,6 +60,7 @@ def main():
     if selected is None:
         raise RuntimeError("Product response lacks goodId; field mapping must be confirmed")
     good_id = selected["goodId"]
+    print("Product listing OK; count:", len(products), "sample goodId:", good_id, flush=True)
     try:
         prices = items(fetch_xml("getProductPriceInfoSvc", {"goodId": good_id}))
     except RuntimeError as exc:
