@@ -13,6 +13,10 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
+      - name: Diagnose Champrice API schemas
+        env:
+          CHAMPRICE_SERVICE_KEY: ${{ secrets.CHAMPRICE_SERVICE_KEY }}
+        run: python champrice/diagnose_api.py
       - name: Verify live Champrice API
         env:
           CHAMPRICE_SERVICE_KEY: ${{ secrets.CHAMPRICE_SERVICE_KEY }}
