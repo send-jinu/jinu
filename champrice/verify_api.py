@@ -4,6 +4,7 @@ Requires CHAMPRICE_SERVICE_KEY. Never logs the secret or authenticated URL.
 """
 import json
 import os
+import datetime
 from pathlib import Path
 from urllib.error import HTTPError, URLError
 from urllib.parse import unquote, urlencode
@@ -56,17 +57,57 @@ def main():
     products = items(fetch_xml("getProductInfoSvc.do", {}))
     if not products:
         raise RuntimeError("No product <item> rows; inspect the actual response schema")
-    selected = next((r for r in products if r.get("goodId")), None)
-    if selected is None:
+    named = [r for r in products if r.get("goodId") and any(
+        word in r.get("goodName", "") for word in ("소면", "골뱅이", "고추장", "간장")
+    )]
+    selected = []
+    seen = set()
+    for product in named[:4] + products[-5:] + products[:2]:
+        pid = product.get("goodId")
+        if pid and pid not in seen:
+            seen.add(pid)
+            selected.append(product)
+        if len(selected) >= 5:
+            break
+    if not selected:
         raise RuntimeError("Product response lacks goodId; field mapping must be confirmed")
-    good_id = selected["goodId"]
-    print("Product listing OK; count:", len(products), "sample goodId:", good_id, flush=True)
-    try:
-        prices = items(fetch_xml("getProductPriceInfoSvc", {"goodId": good_id}))
-    except RuntimeError as exc:
-        if "HTTP 404" not in str(exc):
-            raise
-        prices = items(fetch_xml("getProductPriceInfoSvc.do", {"goodId": good_id}))
+    print("Product listing OK; count:", len(products), flush=True)
+
+    today = datetime.date.today()
+    recent = [today - datetime.timedelta(days=i) for i in range(28)
+              if (today - datetime.timedelta(days=i)).weekday() in (2, 3)]
+    date_options = [d.strftime("%Y%m%d") for d in recent[:5]]
+    # The API rejects requests without a valid survey date. Probe recent survey days.
+    # Try the alternate date formatting once in case the gateway expects ISO format.
+    date_options.insert(1, recent[0].isoformat())
+    failures = []
+    prices = []
+    good_id = ""
+    survey_date = ""
+    for product in selected:
+        pid = product["goodId"]
+        for day in date_options:
+            try:
+                prices = items(fetch_xml("getProductPriceInfoSvc", {
+                    "goodId": pid, "goodInspectDay": day
+                }))
+            except RuntimeError as exc:
+                failures.append({"goodId": pid, "date": day, "error": str(exc)[:160]})
+                continue
+            good_id = pid
+            survey_date = day
+            print("Price endpoint responded OK; goodId:", pid, "date:", day,
+                  "price rows:", len(prices), flush=True)
+            if prices:
+                break
+        if prices:
+            break
+    if not prices:
+        print("Recent survey dates tried:", ", ".join(date_options), flush=True)
+        for failure in failures[:8]:
+            print("Rejected date:", failure["date"], "goodId:", failure["goodId"],
+                  failure["error"], flush=True)
+        raise RuntimeError("No nonempty price response for sampled products and dates")
     result = {
         "source": "한국소비자원_생필품 가격 정보_GW",
         "verified_live": True,
@@ -78,6 +119,7 @@ def main():
         },
         "prices": {
             "sample_good_id": good_id,
+            "survey_date": survey_date,
             "count_in_response": len(prices),
             "field_names": sorted({k for r in prices for k in r}),
             "sample": [{k: r[k] for k in ("goodId", "goodPrice", "goodInspectDay", "entpId") if k in r}
