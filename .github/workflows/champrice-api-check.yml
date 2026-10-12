@@ -1,0 +1,23 @@
+name: Champrice GW Live API Check
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify live Champrice API
+        env:
+          CHAMPRICE_SERVICE_KEY: ${{ secrets.CHAMPRICE_SERVICE_KEY }}
+        run: python champrice/verify_api.py
+      - name: Upload verification report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: champrice-api-verification
+          path: champrice/verification-result.json
+          if-no-files-found: ignore
+          retention-days: 7
