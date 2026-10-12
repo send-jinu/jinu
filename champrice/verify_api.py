@@ -114,6 +114,35 @@ def main():
         if prices:
             break
     if not prices:
+        try:
+            stores = items(fetch_xml("getStoreInfoSvc.do", {}))
+            print("Store listing OK; count:", len(stores), flush=True)
+            for store in stores[:3]:
+                entp_id = store.get("entpId")
+                if not entp_id:
+                    continue
+                for day in ("20260910", "20260827", "20261008"):
+                    try:
+                        root = fetch_xml("getProductPriceInfoSvc", {
+                            "entpId": entp_id, "goodInspectDay": day
+                        })
+                        found = items(root)
+                    except RuntimeError as exc:
+                        failures.append({"entpId": entp_id, "date": day,
+                                         "error": str(exc)[:160]})
+                        continue
+                    print("Store price probe:", entp_id, day, "records:", len(found), flush=True)
+                    if found:
+                        prices = found
+                        good_id = ""
+                        survey_date = day
+                        used_endpoint = "getProductPriceInfoSvc"
+                        break
+                if prices:
+                    break
+        except RuntimeError as exc:
+            failures.append({"stores": str(exc)[:160]})
+    if not prices:
         for failure in failures[:10]:
             print("Price API rejection:", failure, flush=True)
         raise RuntimeError("Price API responded, but no surveyed prices were found in sampled products/dates")
