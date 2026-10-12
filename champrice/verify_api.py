@@ -80,20 +80,27 @@ def main():
     # The API rejects requests without a valid survey date. Probe recent survey days.
     # Try the alternate date formatting once in case the gateway expects ISO format.
     date_options.insert(1, recent[0].isoformat())
+    date_options = date_options[:3]
     failures = []
+    printed_structure = False
     prices = []
     good_id = ""
     survey_date = ""
-    for product in selected:
+    for product in selected[:2]:
         pid = product["goodId"]
         for day in date_options:
             try:
-                prices = items(fetch_xml("getProductPriceInfoSvc", {
+                root = fetch_xml("getProductPriceInfoSvc", {
                     "goodId": pid, "goodInspectDay": day
-                }))
+                })
+                prices = items(root)
             except RuntimeError as exc:
                 failures.append({"goodId": pid, "date": day, "error": str(exc)[:160]})
                 continue
+            if not printed_structure:
+                from collections import Counter
+                print("Price XML tags:", Counter(el.tag.rsplit("}", 1)[-1] for el in root.iter()).most_common(30), flush=True)
+                printed_structure = True
             good_id = pid
             survey_date = day
             print("Price endpoint responded OK; goodId:", pid, "date:", day,
