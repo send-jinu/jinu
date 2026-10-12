@@ -73,48 +73,50 @@ def main():
         raise RuntimeError("Product response lacks goodId; field mapping must be confirmed")
     print("Product listing OK; count:", len(products), flush=True)
 
-    today = datetime.date.today()
-    recent = [today - datetime.timedelta(days=i) for i in range(28)
-              if (today - datetime.timedelta(days=i)).weekday() in (2, 3)]
-    date_options = [d.strftime("%Y%m%d") for d in recent[:5]]
-    # The API rejects requests without a valid survey date. Probe recent survey days.
-    # Try the alternate date formatting once in case the gateway expects ISO format.
-    date_options.insert(1, recent[0].isoformat())
-    date_options = date_options[:3]
-    failures = []
-    printed_structure = False
+    # The GW endpoint validates a survey date. Recent survey dates may lag the
+    # current calendar, so test documented dates from the official price portal.
+    date_options = ["20260910", "20260827", "20260924", "20261008",
+                    "20260813", "20260730"]
+    candidates = [r for r in selected if r.get("goodId")]
+    candidates += [r for r in products if r.get("goodId") in {"1182", "1000"}]
+    seen_ids = set()
+    candidates = [r for r in candidates if not (
+        r["goodId"] in seen_ids or seen_ids.add(r["goodId"]))]
     prices = []
     good_id = ""
     survey_date = ""
-    for product in selected[:2]:
-        pid = product["goodId"]
-        for day in date_options:
-            try:
-                root = fetch_xml("getProductPriceInfoSvc", {
-                    "goodId": pid, "goodInspectDay": day
-                })
-                prices = items(root)
-            except RuntimeError as exc:
-                failures.append({"goodId": pid, "date": day, "error": str(exc)[:160]})
-                continue
-            if not printed_structure:
-                from collections import Counter
-                print("Price XML tags:", Counter(el.tag.rsplit("}", 1)[-1] for el in root.iter()).most_common(30), flush=True)
-                printed_structure = True
-            good_id = pid
-            survey_date = day
-            print("Price endpoint responded OK; goodId:", pid, "date:", day,
-                  "price rows:", len(prices), flush=True)
+    used_endpoint = ""
+    failures = []
+    print("Price API probe products:", [(r.get("goodId"), r.get("goodName")) for r in candidates[:5]], flush=True)
+    for endpoint in ("getProductPriceInfoSvc.do", "getProductPriceInfoSvc"):
+        for product in candidates[:3]:
+            pid = product["goodId"]
+            for day in date_options:
+                try:
+                    root = fetch_xml(endpoint, {"goodId": pid, "goodInspectDay": day})
+                    found = items(root)
+                except RuntimeError as exc:
+                    failures.append({"endpoint": endpoint, "goodId": pid,
+                                     "date": day, "error": str(exc)[:160]})
+                    if "HTTP 404" in str(exc):
+                        break
+                    continue
+                print("Price API probe:", endpoint, "goodId:", pid,
+                      "date:", day, "records:", len(found), flush=True)
+                if found:
+                    prices = found
+                    good_id = pid
+                    survey_date = day
+                    used_endpoint = endpoint
+                    break
             if prices:
                 break
         if prices:
             break
     if not prices:
-        print("Recent survey dates tried:", ", ".join(date_options), flush=True)
-        for failure in failures[:8]:
-            print("Rejected date:", failure["date"], "goodId:", failure["goodId"],
-                  failure["error"], flush=True)
-        raise RuntimeError("No nonempty price response for sampled products and dates")
+        for failure in failures[:10]:
+            print("Price API rejection:", failure, flush=True)
+        raise RuntimeError("Price API responded, but no surveyed prices were found in sampled products/dates")
     result = {
         "source": "한국소비자원_생필품 가격 정보_GW",
         "verified_live": True,
@@ -127,6 +129,7 @@ def main():
         "prices": {
             "sample_good_id": good_id,
             "survey_date": survey_date,
+            "endpoint": used_endpoint,
             "count_in_response": len(prices),
             "field_names": sorted({k for r in prices for k in r}),
             "sample": [{k: r[k] for k in ("goodId", "goodPrice", "goodInspectDay", "entpId") if k in r}
