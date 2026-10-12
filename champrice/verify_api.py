@@ -48,9 +48,16 @@ def fetch_xml(endpoint, params):
 
 
 def items(root):
-    return [{c.tag.rsplit("}", 1)[-1]: (c.text or "").strip()
-             for c in el if len(c) == 0}
-            for el in root.iter() if el.tag.rsplit("}", 1)[-1].lower() == "item"]
+    """Normalize both <item> and iros...VO record nodes."""
+    rows = []
+    for el in root.iter():
+        fields = {c.tag.rsplit("}", 1)[-1]: (c.text or "").strip()
+                  for c in el if len(c) == 0}
+        if len(fields) >= 2 and any(
+            key in fields for key in ("goodId", "entpId", "goodPrice")
+        ):
+            rows.append(fields)
+    return rows
 
 
 def main():
