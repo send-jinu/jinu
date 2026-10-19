@@ -12,5 +12,3 @@
 ## 프랜차이즈 공시 매출 분석 웹앱
 
 `franchise/`에 공정거래위원회 가맹사업 공시 매출 조회 앱을 추가했습니다. 서버를 `python3 franchise/server.py`로 실행한 뒤 브라우저에서 `http://127.0.0.1:8000`을 열고 **인증키 설정** 탭에서 공공데이터포털 키를 등록하거나, 실행 전에 `FRANCHISE_SERVICE_KEY` 환경변수를 설정하세요. 상세한 API 설정과 계산 기준은 [franchise/README.md](franchise/README.md)를 참고하세요.
-
-공개 배포는 저장소의 `render.yaml` Blueprint를 사용합니다. Render에서 이 저장소를 연결한 뒤 `FRANCHISE_SERVICE_KEY` 환경변수 입력란에 키를 등록하면 됩니다. 키는 GitHub에 올리지 않습니다.
