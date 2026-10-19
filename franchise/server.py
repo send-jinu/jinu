@@ -28,8 +28,8 @@ from xml.etree import ElementTree as ET
 ROOT = Path(__file__).resolve().parent
 STATIC = ROOT / "static"
 DEFAULT_API_URL = (
-    "https://apis.data.go.kr/1130000/FftcFranchiseInfoService/"
-    "getFranchiseInfo"
+    "https://apis.data.go.kr/1130000/FftcBrandFrcsUnitAvrSalInfo3_Service/"
+    "getbrandFrcsBzmnAvrgSls2"
 )
 SOURCE_NAME = "공정거래위원회 가맹사업거래 공시정보"
 SOURCE_URL = "https://www.data.go.kr/"
@@ -76,7 +76,7 @@ def _flatten_json(value):
         row_markers = {
             "brandname", "brandnm", "brdnm", "franchisename", "frcsnm",
             "annualsales", "annualaveragesales", "avgsales", "avgsalesamt",
-            "avrgSalesAmt".lower(), "franavgsales", "frcsavgsales", "가맹점연평균매출액",
+            "avrgsalesamt", "avrgslsamt", "unitavrslsamt", "franavgsales", "frcsavgsales", "가맹점연평균매출액",
             "가맹점평균매출액", "storecount", "storecnt", "franchiseCount".lower(),
             "frcscnt", "가맹점수",
         }
@@ -169,7 +169,8 @@ def normalize(rows: list[dict], requested_year: str, requested_brand: str) -> di
         ))
         annual_raw = _value(row, (
             "annualSales", "annualAverageSales", "averageSales", "avgSales", "avgSalesAmt",
-            "avrgSalesAmt", "franAvgSales", "frcsAvgSales", "sales", "salesAmt",
+            "avrgSalesAmt", "avrgSlsAmt", "unitAvrSlsAmt", "unitAvrgSlsAmt",
+            "franAvgSales", "frcsAvgSales", "sales", "salesAmt",
             "salesAmount", "가맹점연평균매출액", "가맹점평균매출액", "연평균매출액",
         ))
         annual = _won(annual_raw)
@@ -179,7 +180,7 @@ def normalize(rows: list[dict], requested_year: str, requested_brand: str) -> di
         ))
         store_count = _number(store_count_raw)
         region = _value(row, ("region", "regionName", "sido", "sidoNm", "ctprvnNm", "area", "시도", "지역")) or "전체"
-        area_raw = _value(row, ("unitAreaSales", "salesPerArea", "areaSales", "areaSalesAmt", "unitSales", "단위면적당매출액"))
+        area_raw = _value(row, ("unitAreaSales", "salesPerArea", "areaSales", "areaSalesAmt", "unitSales", "unitAvrSlsAmt", "unitAvrgSlsAmt", "단위면적당매출액"))
         area_sales = _won(area_raw) if area_raw else None
         area_value = _number(_value(row, ("storeArea", "averageArea", "avgStoreArea", "areaSize", "평균매장면적", "매장면적")))
         if area_sales is None and annual is not None and area_value and area_value > 0:
@@ -249,8 +250,13 @@ def fetch(brand: str, year: str) -> dict:
         "resultType": "json",
         "brandName": brand,
         "brdNm": brand,
+        "brand": brand,
+        "brandId": brand,
+        "brdId": brand,
+        "bzmnNo": brand,
         "year": year,
         "yr": year,
+        "baseYear": year,
     }
     request_url = api_url() + ("&" if "?" in api_url() else "?") + urlencode(params)
     request = Request(request_url, headers={"Accept": "application/json, application/xml", "User-Agent": "Deulsseok-Franchise/1.0"})

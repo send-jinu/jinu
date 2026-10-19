@@ -15,7 +15,7 @@ python3 franchise/server.py
 
 ## API 명세와 해석
 
-공정위 공시 API는 계정·데이터셋에 따라 operation URL과 파라미터가 달라질 수 있습니다. 현재 코드의 기본 주소가 `NO_OPENAPI_SERVICE_ERROR`를 반환하면 키 문제가 아니라 폐기되거나 다른 주소를 사용해야 하는 서비스입니다. 데이터포털의 [가맹사업거래 공시정보](https://www.data.go.kr/data/15087052/openapi.do) 또는 [브랜드별 부담금·평균매출액 데이터](https://www.data.go.kr/data/15113168/openapi.do) 문서에서 **요청 URL**을 확인하고 다음처럼 지정합니다.
+공정위 공시 API의 현재 operation은 `FftcBrandFrcsUnitAvrSalInfo3_Service/getbrandFrcsBzmnAvrgSls2`입니다. 이 기능은 기준연도와 브랜드관리번호를 받아 지역명·가맹점 수·연간평균매출액을 반환합니다. 계정에 따라 operation URL이나 파라미터가 달라질 경우 데이터포털의 [가맹사업거래 공시정보](https://www.data.go.kr/data/15087052/openapi.do) 문서에서 **요청 URL**을 확인하고 다음처럼 지정합니다.
 
 ```bash
 export FRANCHISE_API_URL='문서에 표시된 실제 operation URL'
