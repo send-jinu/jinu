@@ -261,6 +261,18 @@ def fetch(brand: str, year: str) -> dict:
     except HTTPError as exc:
         if exc.code in (401, 403):
             raise RuntimeError("공공데이터포털 인증키가 유효하지 않거나 API 사용 권한이 없습니다.") from None
+        # The old FTC operation URL currently returns a structured 400 rather
+        # than a useful HTTP error. Preserve the provider's reason so the UI
+        # can distinguish an endpoint/configuration problem from a bad key.
+        try:
+            provider_body = exc.read(4096).decode("utf-8", errors="replace")
+        except Exception:
+            provider_body = ""
+        if "NO_OPENAPI_SERVICE_ERROR" in provider_body or "서비스가 없거나 폐기" in provider_body:
+            raise RuntimeError(
+                "공공데이터포털에서 현재 API 주소를 찾지 못했습니다. "
+                "데이터포털 문서의 실제 operation URL을 FRANCHISE_API_URL로 설정해야 합니다."
+            ) from None
         raise RuntimeError(f"공공데이터 API HTTP 오류({exc.code})") from None
     except (URLError, TimeoutError):
         raise RuntimeError("공공데이터 API에 연결할 수 없습니다. 네트워크와 API 주소를 확인하세요.") from None

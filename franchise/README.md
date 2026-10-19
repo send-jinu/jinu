@@ -15,7 +15,13 @@ python3 franchise/server.py
 
 ## API 명세와 해석
 
-기본 operation URL은 공공데이터포털의 공정거래위원회 가맹사업 공시 서비스인 `FftcFranchiseInfoService/getFranchiseInfo`로 설정했습니다. 요청은 `serviceKey`, `pageNo`, `numOfRows`, `type=json`, `brandName`, `year`를 서버에서 전송하며 키는 브라우저로 전달하지 않습니다. 데이터포털 계정에서 발급받은 문서의 operation URL이나 파라미터명이 다른 경우 `FRANCHISE_API_URL` 환경변수로 해당 operation URL을 지정하고, 서버의 정규화 별칭에 맞춰 응답 필드를 연결합니다.
+공정위 공시 API는 계정·데이터셋에 따라 operation URL과 파라미터가 달라질 수 있습니다. 현재 코드의 기본 주소가 `NO_OPENAPI_SERVICE_ERROR`를 반환하면 키 문제가 아니라 폐기되거나 다른 주소를 사용해야 하는 서비스입니다. 데이터포털의 [가맹사업거래 공시정보](https://www.data.go.kr/data/15087052/openapi.do) 또는 [브랜드별 부담금·평균매출액 데이터](https://www.data.go.kr/data/15113168/openapi.do) 문서에서 **요청 URL**을 확인하고 다음처럼 지정합니다.
+
+```bash
+export FRANCHISE_API_URL='문서에 표시된 실제 operation URL'
+```
+
+요청은 `serviceKey`, `pageNo`, `numOfRows`, `type=json`, `brandName`, `year`를 서버에서 전송하며 키는 브라우저로 전달하지 않습니다. 파라미터명이 문서와 다른 경우에는 `server.py`의 `fetch()` 요청 파라미터를 해당 명세에 맞춰 조정합니다.
 
 응답은 JSON/XML 모두 읽고, 원자료 행은 `raw`로 보존합니다. 공시 매출 필드는 공정위 문서의 천원 단위를 원으로 환산하며, 월평균은 연평균 ÷ 12로 계산합니다. 단위면적당 매출은 원자료가 없고 평균 매장면적이 같이 반환될 때만 계산하고 출처를 표시합니다. 조회 결과가 없거나 인증·네트워크 오류가 나면 화면에 안내합니다.
 
