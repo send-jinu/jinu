@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="공정거래위원회 공시자료 기반 프랜차이즈 매출 분석">
+  <title>프랜차이즈 공시 매출 분석</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand-mark"><span>들</span><div><strong>들썩</strong><small>프랜차이즈 데이터 랩</small></div></div>
+    <p class="topbar-note">공정거래위원회 공시자료를 바탕으로 한 창업 분석</p>
+  </header>
+  <main class="shell">
+    <nav class="tabs" aria-label="주 메뉴">
+      <button class="tab is-active" data-tab="settings" aria-controls="panel-settings">인증키 설정</button>
+      <button class="tab" data-tab="search" aria-controls="panel-search">매출 조회</button>
+      <button class="tab" data-tab="guide">이용 안내</button>
+    </nav>
+
+    <section class="panel tab-panel" id="panel-search" hidden>
+      <div class="hero">
+        <span class="eyebrow">FRANCHISE DISCLOSURE</span>
+        <h1>브랜드의 실제 공시 매출을<br><em>한눈에 비교</em>하세요.</h1>
+        <p>공정거래위원회 가맹사업 공시 원자료를 서버에서 받아 연평균·월평균 매출과 지역별 차이로 정리합니다.</p>
+      </div>
+      <form id="search-form" class="search-card">
+        <label>브랜드명<input id="brand" name="brand" placeholder="예: 백소정, 보승회관" required></label>
+        <label>기준연도<select id="year" name="year"></select></label>
+        <button class="primary" type="submit">매출 조회 <span>→</span></button>
+      </form>
+      <div id="message" class="message" role="status" aria-live="polite"></div>
+      <section id="results" class="results" hidden>
+        <div class="result-heading"><div><span class="eyebrow">DISCLOSURE RESULT</span><h2 id="result-title"></h2></div><button id="download" class="secondary" type="button">CSV 다운로드</button></div>
+        <div class="source-line" id="source-line"></div>
+        <div class="metrics">
+          <article class="metric"><span>가맹점 연평균 매출</span><strong id="annual"></strong><small class="raw-badge">원자료</small></article>
+          <article class="metric accent"><span>월평균 매출</span><strong id="monthly"></strong><small class="calc-badge">계산값 · 연평균 ÷ 12</small></article>
+          <article class="metric"><span>단위면적당 평균 매출</span><strong id="area-sales"></strong><small id="area-source"></small></article>
+        </div>
+        <div class="table-card"><div class="table-title"><h3>지역별 비교</h3><span>가맹점 수와 평균 매출</span></div><div class="table-scroll"><table><thead><tr><th>지역</th><th>가맹점 수</th><th>평균 연매출</th><th>월평균(계산)</th></tr></thead><tbody id="region-body"></tbody></table></div></div>
+        <div class="table-card"><div class="table-title"><h3>원자료 레코드</h3><span>API가 반환한 행을 계산값과 구분해 표시합니다.</span></div><div class="table-scroll"><table><thead><tr><th>브랜드</th><th>지역</th><th>연매출 · 원자료</th><th>월매출 · 계산값</th><th>면적당 매출</th></tr></thead><tbody id="raw-body"></tbody></table></div></div>
+      </section>
+    </section>
+
+    <section class="panel tab-panel is-active" id="panel-settings">
+      <div class="section-heading"><span class="eyebrow">PRIVATE CONFIGURATION</span><h2>공공데이터포털 인증키</h2><p>키는 서버로만 전송되며 파일·브라우저 저장소·응답에 저장하지 않습니다. 운영 환경에서는 <code>FRANCHISE_SERVICE_KEY</code> 환경변수 등록을 권장합니다.</p></div>
+      <form id="key-form" class="key-card"><label for="api-key">서비스키<input id="api-key" type="password" autocomplete="off" placeholder="공공데이터포털에서 발급받은 키를 입력하세요" required></label><button class="primary" type="submit">서버에 등록</button><p class="key-status" id="key-status"></p></form>
+      <div class="notice"><strong>보안 안내</strong><p>등록한 키는 현재 실행 중인 서버의 메모리에만 유지됩니다. 서버가 재시작되면 사라지며, 영구 설정은 서버 실행 전에 환경변수로 넣어야 합니다.</p></div>
+    </section>
+
+    <section class="panel tab-panel" id="panel-guide" hidden>
+      <div class="section-heading"><span class="eyebrow">HOW IT WORKS</span><h2>자료와 계산 기준</h2></div>
+      <div class="guide-grid"><article><span>01</span><h3>원자료</h3><p>공정거래위원회 가맹사업거래 공시 API의 브랜드·기준연도·지역·가맹점 수·연평균 매출을 그대로 표시합니다.</p></article><article><span>02</span><h3>계산값</h3><p>월평균 매출은 연평균 매출을 12로 나눕니다. 단위면적당 매출은 API 원자료가 없고 평균 면적이 있을 때만 계산합니다.</p></article><article><span>03</span><h3>출처</h3><p>화면과 CSV에 기준연도와 공공데이터포털 출처를 함께 남깁니다. 수익·비용·순이익 추정은 제공하지 않습니다.</p></article></div>
+    </section>
+  </main>
+  <footer>공시 매출은 실제 수익이나 미래 매출을 보장하지 않습니다. 투자 판단 전 원문 공시를 확인하세요.</footer>
+  <script src="/app.js"></script>
+</body>
+</html>
