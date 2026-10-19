@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: deulsseok-franchise-dashboard
+    runtime: python
+    plan: free
+    buildCommand: python3 -m py_compile franchise/server.py
+    startCommand: HOST=0.0.0.0 python3 franchise/server.py
+    healthCheckPath: /health
+    envVars:
+      - key: FRANCHISE_SERVICE_KEY
+        sync: false
+      - key: FRANCHISE_API_URL
+        value: https://apis.data.go.kr/1130000/FftcFranchiseInfoService/getFranchiseInfo

@@ -309,6 +309,9 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         parsed = urlparse(self.path)
+        if parsed.path == "/health":
+            self.send_json({"ok": True})
+            return
         if parsed.path == "/api/config/status":
             self.send_json({"configured": bool(configured_key()), "source": "환경변수 또는 현재 서버 메모리"})
             return
